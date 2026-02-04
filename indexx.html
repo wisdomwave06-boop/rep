@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>$TYRANT | THE MOVEMENT</title>
+    
+    <link rel="icon" type="image/png" href="icon.png">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@900&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            background-color: #000;
+            color: white; 
+            overflow-x: hidden;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+        }
+
+        #particle-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+            background-size: 100% 4px, 3px 100%;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .meme-bg {
+            position: fixed;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background-image: url('elonm.png');
+            background-size: 200px auto;
+            background-repeat: repeat;
+            animation: move-bg 40s linear infinite;
+            z-index: -3;
+            opacity: 0.25;
+        }
+
+        @keyframes move-bg {
+            0% { transform: rotate(0deg) translate(0, 0); }
+            100% { transform: rotate(0deg) translate(200px, 200px); }
+        }
+
+        .glitch {
+            font-family: 'Permanent Marker', cursive;
+            position: relative;
+            display: inline-block;
+            text-shadow: 0.05em 0 0 rgba(255, 0, 0, 0.75),
+                        -0.025em -0.05em 0 rgba(0, 255, 0, 0.75),
+                        0.025em 0.05em 0 rgba(0, 0, 255, 0.75);
+            animation: glitch 500ms infinite;
+        }
+
+        @keyframes glitch {
+            0% { text-shadow: 0.05em 0 0 #f00, -0.05em -0.025em 0 #0f0, 0.025em 0.05em 0 #00f; }
+            50% { text-shadow: -0.05em -0.025em 0 #f00, 0.025em 0.025em 0 #0f0, -0.05em -0.05em 0 #00f; }
+            100% { text-shadow: 0.025em 0.05em 0 #f00, 0.05em 0 0 #0f0, 0 -0.05em 0 #00f; }
+        }
+
+        .btn-hover {
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .btn-hover:hover {
+            transform: scale(1.05);
+            filter: brightness(1.3);
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.8);
+        }
+
+        .ca-box {
+            background: rgba(10, 10, 10, 0.8);
+            border: 1px solid #222;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(5px);
+        }
+        .ca-box:hover { border-color: #3b82f6; }
+
+        .marquee {
+            position: fixed;
+            bottom: 0; width: 100%;
+            background: #3b82f6;
+            color: white;
+            padding: 8px 0;
+            font-weight: 900;
+            text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+            z-index: 90;
+            border-top: 2px solid white;
+        }
+        .marquee-content {
+            display: inline-block;
+            white-space: nowrap;
+            animation: marquee-run 30s linear infinite;
+            will-change: transform;
+        }
+        @keyframes marquee-run {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* --- COMPACT VOICE BUTTON STYLE --- */
+        .music-container {
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            height: 12px;
+            width: 16px;
+        }
+        .bar {
+            width: 3px;
+            background: #3b82f6;
+            height: 30%;
+            border-radius: 1px;
+            transition: height 0.3s ease;
+        }
+        .playing .bar {
+            animation: dance 0.8s ease-in-out infinite;
+        }
+        .playing .bar:nth-child(1) { animation-delay: 0.1s; }
+        .playing .bar:nth-child(2) { animation-delay: 0.3s; }
+        .playing .bar:nth-child(3) { animation-delay: 0.2s; }
+        .playing .bar:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes dance {
+            0%, 100% { height: 30%; }
+            50% { height: 100%; }
+        }
+        #musicToggle.is-active {
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
+    
+    <canvas id="particle-canvas"></canvas>
+    <div class="meme-bg"></div>
+
+    <audio id="bgMusic" loop>
+        <source src="muzica.mp3" type="audio/mpeg">
+    </audio>
+
+    <button id="musicToggle" class="fixed top-6 right-6 z-[110] bg-black/80 border border-zinc-800 px-4 py-2 rounded-lg backdrop-blur-md transition-all active:scale-95 group flex items-center gap-2">
+        <div id="visualizer" class="music-container">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+        <span class="text-[11px] font-black uppercase tracking-widest text-zinc-400 group-hover:text-blue-400 transition-colors">VOICE</span>
+    </button>
+
+    <div class="relative z-10 max-w-2xl w-full text-center space-y-8">
+        <div>
+            <span class="bg-blue-600 text-white text-[10px] font-black px-6 py-2 rounded-full uppercase tracking-widest animate-pulse border-2 border-white">
+                Resistance is live ⚔️
+            </span>
+        </div>
+        
+        <h1 class="text-7xl md:text-9xl font-black glitch tracking-tighter uppercase italic">
+            $TYRANT
+        </h1>
+
+        <div class="bg-black/40 p-6 border-y-2 border-blue-600 backdrop-blur-md">
+            <p class="text-xl md:text-3xl font-black uppercase tracking-tight leading-none italic">
+                "They want to ban X. <br> 
+                <span class="text-blue-500 underline decoration-wavy">We want to ban them."</span>
+            </p>
+        </div>
+
+        <div class="flex flex-col gap-5 items-center">
+            <a href="https://pump.fun" target="_blank" 
+               class="btn-hover w-full max-w-sm bg-blue-600 text-white font-black py-6 text-3xl border-b-8 border-blue-900 active:border-b-0 active:translate-y-2 text-center">
+                BUY $TYRANT ⚔️
+            </a>
+            
+            <div class="flex gap-4 w-full max-w-sm">
+                <a href="LINK_TELEGRAM" class="btn-hover flex-1 bg-zinc-900 border-2 border-zinc-800 py-4 flex justify-center items-center hover:border-blue-500 group">
+                    <svg class="w-8 h-8 fill-white group-hover:fill-blue-400 transition-colors" viewBox="0 0 24 24">
+                        <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18.717-.962 4.084-1.362 5.441-.168.571-.42 1.058-.755 1.462-.335.404-.731.731-1.189.981-.458.25-.97.375-1.536.375-1.012 0-1.921-.383-2.727-1.149l-1.428-1.352c-.156-.148-.282-.31-.378-.486-.096-.176-.144-.366-.144-.57 0-.204.048-.394.144-.57.096-.176.222-.338.378-.486l3.654-3.468c.114-.108.171-.24.171-.396 0-.156-.057-.288-.171-.396-.114-.108-.246-.162-.396-.162-.15 0-.282.054-.396.162l-4.572 4.341c-.48.456-.888.684-1.224.684-.336 0-.642-.078-.918-.234L3.6 9.805c-.342-.162-.513-.414-.513-.756 0-.342.171-.594.513-.756l15.903-6.216c.342-.162.594-.132.756.09.162.222.192.474.09.756-.03.084-.45 1.83-1.26 5.238z"/>
+                    </svg>
+                </a>
+                <a href="LINK_X" class="btn-hover flex-1 bg-zinc-900 border-2 border-zinc-800 py-4 flex justify-center items-center hover:border-blue-500 group">
+                    <svg class="w-8 h-8 fill-white group-hover:fill-blue-400 transition-colors" viewBox="0 0 24 24">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+
+        <div id="copyButton" onclick="copyCA()" class="ca-box mt-10 p-4 cursor-pointer group rounded-lg">
+            <p id="copyStatus" class="text-[10px] text-zinc-500 uppercase font-black mb-1 group-hover:text-blue-400">Official Contract Address (Click to copy)</p>
+            <code id="caText" class="text-xs md:text-lg text-blue-500 break-all font-mono font-bold">TBA_AT_LAUNCH_SOON</code>
+        </div>
+    </div>
+
+    <div class="marquee">
+        <div class="marquee-content text-lg">
+            <span>$TYRANT IS THE RESISTANCE --- NO TAXES --- NO BULLSHIT --- JOIN THE REVOLUTION --- $TYRANT TO THE MOON --- FREEDOM OF SPEECH --- </span>
+            <span>$TYRANT IS THE RESISTANCE --- NO TAXES --- NO BULLSHIT --- JOIN THE REVOLUTION --- $TYRANT TO THE MOON --- FREEDOM OF SPEECH --- </span>
+        </div>
+    </div>
+
+    <script>
+        const music = document.getElementById('bgMusic');
+        const musicBtn = document.getElementById('musicToggle');
+        const visualizer = document.getElementById('visualizer');
+
+        musicBtn.addEventListener('click', () => {
+            if (music.paused) {
+                music.play();
+                visualizer.classList.add('playing');
+                musicBtn.classList.add('is-active');
+            } else {
+                music.pause();
+                visualizer.classList.remove('playing');
+                musicBtn.classList.remove('is-active');
+            }
+        });
+
+        // Particle System
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        function initCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 1;
+                this.speedX = Math.random() * 0.5 - 0.25;
+                this.speedY = Math.random() * 0.5 - 0.25;
+            }
+            update() {
+                this.x += this.speedX; this.y += this.speedY;
+                if (this.x > canvas.width) this.x = 0; if (this.x < 0) this.x = canvas.width;
+                if (this.y > canvas.height) this.y = 0; if (this.y < 0) this.y = canvas.height;
+            }
+            draw() {
+                ctx.fillStyle = 'rgba(59, 130, 246, 0.5)';
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+            }
+        }
+        function createParticles() { particles = []; for (let i = 0; i < 80; i++) particles.push(new Particle()); }
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach((p, index) => {
+                p.update(); p.draw();
+                for (let j = index; j < particles.length; j++) {
+                    const dx = p.x - particles[j].x; const dy = p.y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 150) {
+                        ctx.strokeStyle = `rgba(59, 130, 246, ${1 - distance/150})`;
+                        ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
+                    }
+                }
+            });
+            requestAnimationFrame(animate);
+        }
+        window.addEventListener('resize', () => { initCanvas(); createParticles(); });
+        initCanvas(); createParticles(); animate();
+
+        function copyCA() {
+            const text = document.getElementById('caText').innerText;
+            const statusText = document.getElementById('copyStatus');
+            const box = document.getElementById('copyButton');
+            navigator.clipboard.writeText(text).then(() => {
+                box.style.backgroundColor = '#1d4ed8';
+                statusText.innerText = "COPIED! ✅";
+                statusText.style.color = "white";
+                setTimeout(() => { 
+                    box.style.backgroundColor = 'rgba(10, 10, 10, 0.8)'; 
+                    statusText.innerText = "Official Contract Address (Click to copy)";
+                    statusText.style.color = "";
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
